@@ -1,0 +1,18 @@
+Package: sway-backgrounds
+Source: sway
+Version: 1:1.1-rc3-1-5ff330e~disco
+Architecture: all
+Maintainer: Aleksey Samoilov <samoilov.lex@gmail.com>
+Installed-Size: 4927
+Suggests: sway
+Section: x11
+Priority: optional
+Multi-Arch: foreign
+Homepage: http://swaywm.org
+Description: Set of backgrounds packaged with the sway window manager
+ sway (SirCmpwn's Wayland compositor) is a tiling Wayland compositor and a
+ drop-in replacement for the i3 window manager for X11. It works with your
+ existing i3 configuration and supports most of i3's features, plus a few
+ extras. This means it is a minimalist, tiling window manager.
+ .
+ This package contains a set of desktop backgrounds that come with sway.
