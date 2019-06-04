@@ -1,11 +1,11 @@
-74d4b1456aa1091ee85757b92deca4da  usr/bin/sway
-47046c01ec450b47b5431ec2cf613346  usr/bin/swaybar
-5cbe2643dd740ecc9f5e141ca53606a7  usr/bin/swaymsg
-781cfd783d80d4c215e260df0103f2a9  usr/bin/swaynag
+f4ee576b81c662e6ee250b8d0aabf53d  usr/bin/sway
+827ac912c51a61bd0fcc4257dff97a02  usr/bin/swaybar
+a507b51e1ebea4d7567f06b6653e4b80  usr/bin/swaymsg
+0b5aaa1172e941a7d6b31e0364c117c8  usr/bin/swaynag
 38d041c9ac9310b5081556d822794aba  usr/share/bash-completion/completions/sway
 32757896d7fc71cc6acb57eec3559df3  usr/share/bash-completion/completions/swaybar
 7cdb72417049bd5f5759222d17a5146f  usr/share/bash-completion/completions/swaymsg
-91c9efc98dd37bec2a95b649ba7a3c44  usr/share/doc/sway/changelog.Debian.gz
+b85d7eb58cfafda8ec60246ba924c5c6  usr/share/doc/sway/changelog.Debian.gz
 9faa19054cb2df91ae7a1b55ffdb7fce  usr/share/doc/sway/copyright
 a5909c5c235620ebc67f9612b8358fba  usr/share/fish/completions/sway.fish
 caf9365280ddc6204419f7d897c65af9  usr/share/fish/completions/swaymsg.fish

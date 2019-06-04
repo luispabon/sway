@@ -1,4 +1,10 @@
-sway (1:1.1-rc3-1-5ff330e~disco) disco; urgency=low
+sway (1:1.1-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Mon, 03 Jun 2019 09:52:43 +0400
+
+ sway (1:1.1-rc3-1-5ff330e~disco) disco; urgency=low
 
   * New upstream release
 
