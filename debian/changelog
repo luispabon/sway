@@ -1,0 +1,89 @@
+sway (1:1.1.1-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Tue, 04 Jun 2019 09:52:43 +0400
+
+sway (1:1.1-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Mon, 03 Jun 2019 09:52:43 +0400
+
+ sway (1:1.1-rc3-1-5ff330e~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Mon, 20 May 2019 09:52:43 +0400
+
+ sway (1:1.1-rc2-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Mon, 20 May 2019 09:52:43 +0400
+
+sway (1:1.0-3~disco) disco; urgency=low
+
+  * Update manpages
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Tue, 12 Mar 2019 21:44:46 +0400
+
+sway (1:1.0-2~disco) disco; urgency=low
+
+  * First stable release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Mon, 11 Mar 2019 21:14:44 +0400
+
+sway (1:1.0-1~disco) disco; urgency=low
+
+  * First stable release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Mon, 11 Mar 2019 20:47:19 +0400
+
+sway (1.0-rc5-1~disco) disco; urgency=low
+
+  * New rc release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Sun, 10 Mar 2019 13:43:03 +0400
+
+sway (1.0-rc4-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Wed, 27 Feb 2019 20:53:31 +0400
+
+sway (1.0-rc3-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Tue, 19 Feb 2019 21:05:42 +0400
+
+sway (1.0-rc2-1~disco) disco; urgency=low
+
+  * New upstream release
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Mon, 11 Feb 2019 19:50:58 +0400
+
+sway (1.0-rc1-4~disco) disco; urgency=low
+
+  * Rebuild
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Tue, 05 Feb 2019 22:22:11 +0400
+
+sway (1.0-rc1-3~disco) disco; urgency=low
+
+  * Fix
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Tue, 05 Feb 2019 21:56:14 +0400
+
+sway (1.0-rc1-2~disco) disco; urgency=low
+
+  * Fix build
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Tue, 05 Feb 2019 21:51:01 +0400
+
+sway (1.0-rc1-1~disco) disco; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Aleksey Samoilov <samoilov.lex@gmail.com>  Tue, 05 Feb 2019 20:58:19 +0400
