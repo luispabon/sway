@@ -45,7 +45,8 @@ the bindsym command.
 Commands are split into several arguments using spaces. You can enclose
 arguments with quotation marks (*"..."* or *'...'*) to add spaces to a single
 argument. You may also run several commands in order by separating each with
-*,* or *;*.
+*,* or *;*. Criteria is retained across commands separated by *,*, but will be
+reset (and allow for new criteria, if desired) for commands separated by a *;*.
 
 Throughout the documentation, *|* is used to distinguish between arguments for
 which you may only select one. *[...]* is used for optional arguments, and
@@ -380,7 +381,7 @@ runtime.
 *bindswitch* [--locked] [--no-warn] <switch>:<state> <command>
 	Binds <switch> to execute the sway command _command_ on state changes.
 	Supported switches are _lid_ (laptop lid) and _tablet_ (tablet mode)
-	switches. Valid values for _state_ are _on_, _off_ and _toggle. These
+	switches. Valid values for _state_ are _on_, _off_ and _toggle_. These
 	switches are on when the device lid is shut and when tablet mode is active
 	respectively. _toggle_ is also supported to run a command both when the
 	switch is toggled on or off.
@@ -753,7 +754,9 @@ A criteria is a string in the form of, for example:
 
 The string contains one or more (space separated) attribute/value pairs. They
 are used by some commands to choose which views to execute actions on. All
-attributes must match for the criteria to match.
+attributes must match for the criteria to match. Criteria is retained across
+commands separated by a *,*, but will be reset (and allow for new criteria, if
+desired) for commands separated by a *;*.
 
 Criteria may be used with either the *for_window* or *assign* commands to
 specify operations to perform on new views. A criteria may also be used to

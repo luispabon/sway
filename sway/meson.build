@@ -89,6 +89,7 @@ sway_sources = files(
 	'commands/seat/fallback.c',
 	'commands/seat/hide_cursor.c',
 	'commands/seat/pointer_constraint.c',
+	'commands/seat/xcursor_theme.c',
 	'commands/set.c',
 	'commands/show_marks.c',
 	'commands/smart_borders.c',
@@ -163,6 +164,7 @@ sway_sources = files(
 	'commands/input/xkb_numlock.c',
 	'commands/input/xkb_options.c',
 	'commands/input/xkb_rules.c',
+	'commands/input/xkb_switch_layout.c',
 	'commands/input/xkb_variant.c',
 
 	'commands/output/background.c',

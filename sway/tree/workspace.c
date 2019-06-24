@@ -212,9 +212,9 @@ static void workspace_name_from_binding(const struct sway_binding * binding,
 	char *name = NULL;
 
 	// workspace n
-	char *cmd = argsep(&cmdlist, " ");
+	char *cmd = argsep(&cmdlist, " ", NULL);
 	if (cmdlist) {
-		name = argsep(&cmdlist, ",;");
+		name = argsep(&cmdlist, ",;", NULL);
 	}
 
 	// TODO: support "move container to workspace" bindings as well
@@ -514,7 +514,7 @@ bool workspace_is_empty(struct sway_workspace *ws) {
 }
 
 static int find_output(const void *id1, const void *id2) {
-	return strcmp(id1, id2) ? 0 : 1;
+	return strcmp(id1, id2);
 }
 
 void workspace_output_raise_priority(struct sway_workspace *ws,

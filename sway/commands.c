@@ -143,44 +143,34 @@ static int handler_compare(const void *_a, const void *_b) {
 	return strcasecmp(a->command, b->command);
 }
 
-struct cmd_handler *find_handler(char *line, struct cmd_handler *cmd_handlers,
-		int handlers_size) {
-	struct cmd_handler d = { .command=line };
-	struct cmd_handler *res = NULL;
-	sway_log(SWAY_DEBUG, "find_handler(%s)", line);
-
-	bool config_loading = config->reading || !config->active;
-
-	if (!config_loading) {
-		res = bsearch(&d, command_handlers,
-				sizeof(command_handlers) / sizeof(struct cmd_handler),
-				sizeof(struct cmd_handler), handler_compare);
-
-		if (res) {
-			return res;
-		}
+struct cmd_handler *find_handler(char *line, struct cmd_handler *handlers,
+		size_t handlers_size) {
+	if (!handlers || !handlers_size) {
+		return NULL;
 	}
-
-	if (config->reading) {
-		res = bsearch(&d, config_handlers,
-				sizeof(config_handlers) / sizeof(struct cmd_handler),
-				sizeof(struct cmd_handler), handler_compare);
-
-		if (res) {
-			return res;
-		}
-	}
-
-	if (!cmd_handlers) {
-		cmd_handlers = handlers;
-		handlers_size = sizeof(handlers);
-	}
-
-	res = bsearch(&d, cmd_handlers,
+	struct cmd_handler query = { .command = line };
+	return bsearch(&query, handlers,
 			handlers_size / sizeof(struct cmd_handler),
 			sizeof(struct cmd_handler), handler_compare);
+}
 
-	return res;
+static struct cmd_handler *find_handler_ex(char *line,
+		struct cmd_handler *config_handlers, size_t config_handlers_size,
+		struct cmd_handler *command_handlers, size_t command_handlers_size,
+		struct cmd_handler *handlers, size_t handlers_size) {
+	struct cmd_handler *handler = NULL;
+	if (config->reading) {
+		handler = find_handler(line, config_handlers, config_handlers_size);
+	} else if (config->active) {
+		handler = find_handler(line, command_handlers, command_handlers_size);
+	}
+	return handler ? handler : find_handler(line, handlers, handlers_size);
+}
+
+static struct cmd_handler *find_core_handler(char *line) {
+	return find_handler_ex(line, config_handlers, sizeof(config_handlers),
+			command_handlers, sizeof(command_handlers),
+			handlers, sizeof(handlers));
 }
 
 static void set_config_node(struct sway_node *node) {
@@ -211,8 +201,8 @@ list_t *execute_command(char *_exec, struct sway_seat *seat,
 	list_t *res_list = create_list();
 	char *exec = strdup(_exec);
 	char *head = exec;
-	char *cmdlist;
 	char *cmd;
+	char matched_delim = ';';
 	list_t *views = NULL;
 
 	if (seat == NULL) {
@@ -227,86 +217,86 @@ list_t *execute_command(char *_exec, struct sway_seat *seat,
 
 	head = exec;
 	do {
+		for (; isspace(*head); ++head) {}
 		// Extract criteria (valid for this command list only).
-		config->handler_context.using_criteria = false;
-		if (*head == '[') {
-			char *error = NULL;
-			struct criteria *criteria = criteria_parse(head, &error);
-			if (!criteria) {
-				list_add(res_list, cmd_results_new(CMD_INVALID,	"%s", error));
-				free(error);
-				goto cleanup;
+		if (matched_delim == ';') {
+			config->handler_context.using_criteria = false;
+			if (*head == '[') {
+				char *error = NULL;
+				struct criteria *criteria = criteria_parse(head, &error);
+				if (!criteria) {
+					list_add(res_list,
+							cmd_results_new(CMD_INVALID, "%s", error));
+					free(error);
+					goto cleanup;
+				}
+				list_free(views);
+				views = criteria_get_views(criteria);
+				head += strlen(criteria->raw);
+				criteria_destroy(criteria);
+				config->handler_context.using_criteria = true;
+				// Skip leading whitespace
+				for (; isspace(*head); ++head) {}
 			}
-			views = criteria_get_views(criteria);
-			head += strlen(criteria->raw);
-			criteria_destroy(criteria);
-			config->handler_context.using_criteria = true;
-			// Skip leading whitespace
-			for (; isspace(*head); ++head) {}
 		}
 		// Split command list
-		cmdlist = argsep(&head, ";");
-		for (; isspace(*cmdlist); ++cmdlist) {}
-		do {
-			// Split commands
-			cmd = argsep(&cmdlist, ",");
-			for (; isspace(*cmd); ++cmd) {}
-			if (strcmp(cmd, "") == 0) {
-				sway_log(SWAY_INFO, "Ignoring empty command.");
-				continue;
-			}
-			sway_log(SWAY_INFO, "Handling command '%s'", cmd);
-			//TODO better handling of argv
-			int argc;
-			char **argv = split_args(cmd, &argc);
-			if (strcmp(argv[0], "exec") != 0 &&
-					strcmp(argv[0], "exec_always") != 0 &&
-					strcmp(argv[0], "mode") != 0) {
-				int i;
-				for (i = 1; i < argc; ++i) {
-					if (*argv[i] == '\"' || *argv[i] == '\'') {
-						strip_quotes(argv[i]);
-					}
+		cmd = argsep(&head, ";,", &matched_delim);
+		for (; isspace(*cmd); ++cmd) {}
+
+		if (strcmp(cmd, "") == 0) {
+			sway_log(SWAY_INFO, "Ignoring empty command.");
+			continue;
+		}
+		sway_log(SWAY_INFO, "Handling command '%s'", cmd);
+		//TODO better handling of argv
+		int argc;
+		char **argv = split_args(cmd, &argc);
+		if (strcmp(argv[0], "exec") != 0 &&
+				strcmp(argv[0], "exec_always") != 0 &&
+				strcmp(argv[0], "mode") != 0) {
+			for (int i = 1; i < argc; ++i) {
+				if (*argv[i] == '\"' || *argv[i] == '\'') {
+					strip_quotes(argv[i]);
 				}
 			}
-			struct cmd_handler *handler = find_handler(argv[0], NULL, 0);
-			if (!handler) {
-				list_add(res_list, cmd_results_new(CMD_INVALID,
-						"Unknown/invalid command '%s'", argv[0]));
+		}
+		struct cmd_handler *handler = find_core_handler(argv[0]);
+		if (!handler) {
+			list_add(res_list, cmd_results_new(CMD_INVALID,
+					"Unknown/invalid command '%s'", argv[0]));
+			free_argv(argc, argv);
+			goto cleanup;
+		}
+
+		// Var replacement, for all but first argument of set
+		for (int i = handler->handle == cmd_set ? 2 : 1; i < argc; ++i) {
+			argv[i] = do_var_replacement(argv[i]);
+		}
+
+		if (!config->handler_context.using_criteria) {
+			// The container or workspace which this command will run on.
+			struct sway_node *node = con ? &con->node :
+					seat_get_focus_inactive(seat, &root->node);
+			set_config_node(node);
+			struct cmd_results *res = handler->handle(argc-1, argv+1);
+			list_add(res_list, res);
+			if (res->status == CMD_INVALID) {
 				free_argv(argc, argv);
 				goto cleanup;
 			}
-
-			// Var replacement, for all but first argument of set
-			for (int i = handler->handle == cmd_set ? 2 : 1; i < argc; ++i) {
-				argv[i] = do_var_replacement(argv[i]);
-			}
-
-			if (!config->handler_context.using_criteria) {
-				// The container or workspace which this command will run on.
-				struct sway_node *node = con ? &con->node :
-						seat_get_focus_inactive(seat, &root->node);
-				set_config_node(node);
+		} else {
+			for (int i = 0; i < views->length; ++i) {
+				struct sway_view *view = views->items[i];
+				set_config_node(&view->container->node);
 				struct cmd_results *res = handler->handle(argc-1, argv+1);
 				list_add(res_list, res);
 				if (res->status == CMD_INVALID) {
 					free_argv(argc, argv);
 					goto cleanup;
 				}
-			} else {
-				for (int i = 0; i < views->length; ++i) {
-					struct sway_view *view = views->items[i];
-					set_config_node(&view->container->node);
-					struct cmd_results *res = handler->handle(argc-1, argv+1);
-					list_add(res_list, res);
-					if (res->status == CMD_INVALID) {
-						free_argv(argc, argv);
-						goto cleanup;
-					}
-				}
 			}
-			free_argv(argc, argv);
-		} while(cmdlist);
+		}
+		free_argv(argc, argv);
 	} while(head);
 cleanup:
 	free(exec);
@@ -360,7 +350,7 @@ struct cmd_results *config_command(char *exec, char **new_block) {
 
 	// Determine the command handler
 	sway_log(SWAY_INFO, "Config command: %s", exec);
-	struct cmd_handler *handler = find_handler(argv[0], NULL, 0);
+	struct cmd_handler *handler = find_core_handler(argv[0]);
 	if (!handler || !handler->handle) {
 		const char *error = handler
 			? "Command '%s' is shimmed, but unimplemented"

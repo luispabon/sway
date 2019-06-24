@@ -2,6 +2,7 @@
 #include <strings.h>
 #include "sway/commands.h"
 #include "sway/input/input-manager.h"
+#include "sway/input/keyboard.h"
 #include "log.h"
 #include "stringop.h"
 
@@ -30,6 +31,7 @@ static struct cmd_handler input_handlers[] = {
 	{ "xkb_model", input_cmd_xkb_model },
 	{ "xkb_options", input_cmd_xkb_options },
 	{ "xkb_rules", input_cmd_xkb_rules },
+	{ "xkb_switch_layout", input_cmd_xkb_switch_layout },
 	{ "xkb_variant", input_cmd_xkb_variant },
 };
 
@@ -85,9 +87,21 @@ struct cmd_results *cmd_input(int argc, char **argv) {
 			input_handlers, sizeof(input_handlers));
 	}
 
-	if (!res || res->status == CMD_SUCCESS) {
+	if ((!res || res->status == CMD_SUCCESS) &&
+			strcmp(argv[1], "xkb_switch_layout") != 0) {
+		char *error = NULL;
 		struct input_config *ic =
-			store_input_config(config->handler_context.input_config);
+			store_input_config(config->handler_context.input_config, &error);
+		if (!ic) {
+			free_input_config(config->handler_context.input_config);
+			if (res) {
+				free_cmd_results(res);
+			}
+			res = cmd_results_new(CMD_FAILURE, "Failed to compile keymap: %s",
+					error ? error : "(details unavailable)");
+			free(error);
+			return res;
+		}
 
 		input_manager_apply_input_config(ic);
 		retranslate_keysyms(ic);

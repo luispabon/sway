@@ -165,6 +165,10 @@ struct seat_config {
 	list_t *attachments; // list of seat_attachment configs
 	int hide_cursor_timeout;
 	enum seat_config_allow_constrain allow_constrain;
+	struct {
+		char *name;
+		int size;
+	} xcursor_theme;
 };
 
 enum config_dpms {
@@ -555,6 +559,11 @@ bool read_config(FILE *file, struct sway_config *config,
 void run_deferred_commands(void);
 
 /**
+ * Run the binding commands that were deferred when initializing the inputs
+ */
+void run_deferred_bindings(void);
+
+/**
  * Adds a warning entry to the swaynag instance used for errors.
  */
 void config_add_swaynag_warning(char *fmt, ...);
@@ -577,7 +586,7 @@ struct input_config *new_input_config(const char* identifier);
 
 void merge_input_config(struct input_config *dst, struct input_config *src);
 
-struct input_config *store_input_config(struct input_config *ic);
+struct input_config *store_input_config(struct input_config *ic, char **error);
 
 void input_config_fill_rule_names(struct input_config *ic,
 		struct xkb_rule_names *rules);

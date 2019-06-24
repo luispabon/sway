@@ -441,6 +441,11 @@ bool load_main_config(const char *file, bool is_active, bool validating) {
 		config->reloading = true;
 		config->active = true;
 
+		// xwayland can only be enabled/disabled at launch
+		sway_log(SWAY_DEBUG, "xwayland will remain %s",
+				old_config->xwayland ? "enabled" : "disabled");
+		config->xwayland = old_config->xwayland;
+
 		if (old_config->swaybg_client != NULL) {
 			wl_client_destroy(old_config->swaybg_client);
 		}
@@ -644,7 +649,23 @@ void run_deferred_commands(void) {
 		list_free(res_list);
 		free(line);
 	}
-	transaction_commit_dirty();
+}
+
+void run_deferred_bindings(void) {
+	struct sway_seat *seat;
+	wl_list_for_each(seat, &(server.input->seats), link) {
+		if (!seat->deferred_bindings->length) {
+			continue;
+		}
+		sway_log(SWAY_DEBUG, "Running deferred bindings for seat %s",
+				seat->wlr_seat->name);
+		while (seat->deferred_bindings->length) {
+			struct sway_binding *binding = seat->deferred_bindings->items[0];
+			seat_execute_command(seat, binding);
+			list_del(seat->deferred_bindings, 0);
+			free_sway_binding(binding);
+		}
+	}
 }
 
 // get line, with backslash continuation

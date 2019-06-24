@@ -47,7 +47,8 @@ struct cmd_results *checkarg(int argc, const char *name,
 		enum expected_args type, int val);
 
 struct cmd_handler *find_handler(char *line, struct cmd_handler *cmd_handlers,
-		int handlers_size);
+		size_t handlers_size);
+
 /**
  * Parse and executes a command.
  *
@@ -260,6 +261,7 @@ sway_cmd input_cmd_xkb_model;
 sway_cmd input_cmd_xkb_numlock;
 sway_cmd input_cmd_xkb_options;
 sway_cmd input_cmd_xkb_rules;
+sway_cmd input_cmd_xkb_switch_layout;
 sway_cmd input_cmd_xkb_variant;
 
 sway_cmd output_cmd_background;
@@ -278,6 +280,7 @@ sway_cmd seat_cmd_cursor;
 sway_cmd seat_cmd_fallback;
 sway_cmd seat_cmd_hide_cursor;
 sway_cmd seat_cmd_pointer_constraint;
+sway_cmd seat_cmd_xcursor_theme;
 
 sway_cmd cmd_ipc_cmd;
 sway_cmd cmd_ipc_events;
