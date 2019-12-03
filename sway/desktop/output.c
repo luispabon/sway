@@ -426,7 +426,7 @@ static void send_frame_done_iterator(struct sway_output *output, struct sway_vie
 	int delay = data->msec_until_refresh - output->max_render_time
 			- view_max_render_time;
 
-	if ((output->max_render_time == 0 && view_max_render_time == 0) || delay < 1) {
+	if (output->max_render_time == 0 || view_max_render_time == 0 || delay < 1) {
 		wlr_surface_send_frame_done(surface, &data->when);
 	} else {
 		struct sway_surface *sway_surface = surface->data;
@@ -513,7 +513,10 @@ int output_repaint_timer_handler(void *data) {
 		return 0;
 	}
 
-	output->wlr_output->block_idle_frame = false;
+	output->wlr_output->frame_pending = false;
+
+	bool surface_needs_frame = output->surface_needs_frame;
+	output->surface_needs_frame = false;
 
 	struct sway_workspace *workspace = output->current.active_workspace;
 	if (workspace == NULL) {
@@ -557,6 +560,8 @@ int output_repaint_timer_handler(void *data) {
 		clock_gettime(CLOCK_MONOTONIC, &now);
 
 		output_render(output, &now, &damage);
+	} else if (surface_needs_frame) {
+		wlr_output_schedule_frame(output->wlr_output);
 	}
 
 	pixman_region32_fini(&damage);
@@ -618,7 +623,7 @@ static void damage_handle_frame(struct wl_listener *listener, void *user_data) {
 	if (delay < 1) {
 		output_repaint_timer_handler(output);
 	} else {
-		output->wlr_output->block_idle_frame = true;
+		output->wlr_output->frame_pending = true;
 		wl_event_source_timer_update(output->repaint_timer, delay);
 	}
 
@@ -672,6 +677,7 @@ static void damage_surface_iterator(struct sway_output *output, struct sway_view
 		wlr_output_damage_add_box(output->damage, &box);
 	}
 
+	output->surface_needs_frame = true;
 	wlr_output_schedule_frame(output->wlr_output);
 }
 
