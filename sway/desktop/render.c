@@ -96,9 +96,12 @@ static void set_scale_filter(struct wlr_output *wlr_output,
 
 static void render_texture(struct wlr_output *wlr_output,
 		pixman_region32_t *output_damage, struct wlr_texture *texture,
-		const struct wlr_box *box, const float matrix[static 9], float alpha) {
+		const struct wlr_box *box, const float matrix[static 9], float alpha,
+		enum scale_filter_mode scale_filter) {
 	struct wlr_renderer *renderer =
 		wlr_backend_get_renderer(wlr_output->backend);
+
+	set_scale_filter(wlr_output, texture, scale_filter);
 
 	pixman_region32_t damage;
 	pixman_region32_init(&damage);
@@ -143,8 +146,7 @@ static void render_surface_iterator(struct sway_output *output, struct sway_view
 	wlr_matrix_project_box(matrix, &box, transform, rotation,
 		wlr_output->transform_matrix);
 
-	set_scale_filter(wlr_output, texture, output->scale_filter);
-	render_texture(wlr_output, output_damage, texture, &box, matrix, alpha);
+	render_texture(wlr_output, output_damage, texture, &box, matrix, alpha, output->scale_filter);
 
 	wlr_presentation_surface_sampled_on_output(server.presentation, surface,
 		wlr_output);
@@ -293,9 +295,8 @@ static void render_saved_view(struct sway_view *view,
 	wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL, 0,
 		wlr_output->transform_matrix);
 
-	set_scale_filter(wlr_output, view->saved_buffer->texture, output->scale_filter);
 	render_texture(wlr_output, damage, view->saved_buffer->texture,
-			&box, matrix, alpha);
+			&box, matrix, alpha, output->scale_filter);
 
 	// FIXME: we should set the surface that this saved buffer originates from
 	// as sampled here.
@@ -473,8 +474,9 @@ static void render_titlebar(struct sway_output *output,
 		if (ob_inner_width < texture_box.width) {
 			texture_box.width = ob_inner_width;
 		}
+
 		render_texture(output->wlr_output, output_damage, marks_texture,
-			&texture_box, matrix, con->alpha);
+			&texture_box, matrix, con->alpha, output->scale_filter);
 
 		// Padding above
 		memcpy(&color, colors->background, sizeof(float) * 4);
@@ -542,7 +544,7 @@ static void render_titlebar(struct sway_output *output,
 		}
 
 		render_texture(output->wlr_output, output_damage, title_texture,
-			&texture_box, matrix, con->alpha);
+			&texture_box, matrix, con->alpha, output->scale_filter);
 
 		// Padding above
 		memcpy(&color, colors->background, sizeof(float) * 4);
