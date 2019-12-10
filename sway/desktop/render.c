@@ -98,10 +98,10 @@ static void render_texture(struct wlr_output *wlr_output,
 		pixman_region32_t *output_damage, struct wlr_texture *texture,
 		const struct wlr_box *box, const float matrix[static 9], float alpha,
 		enum scale_filter_mode scale_filter) {
-	struct wlr_renderer *renderer =
-		wlr_backend_get_renderer(wlr_output->backend);
+    set_scale_filter(wlr_output, texture, scale_filter);
 
-	set_scale_filter(wlr_output, texture, scale_filter);
+    struct wlr_renderer *renderer =
+		wlr_backend_get_renderer(wlr_output->backend);
 
 	pixman_region32_t damage;
 	pixman_region32_init(&damage);
