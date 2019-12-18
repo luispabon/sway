@@ -326,7 +326,7 @@ static void handle_key_event(struct sway_keyboard *keyboard,
 		keyboard->seat_device->input_device->wlr_device;
 	char *device_identifier = input_device_get_identifier(wlr_device);
 	bool exact_identifier = wlr_device->keyboard->group != NULL;
-	wlr_idle_notify_activity(server.idle, wlr_seat);
+	seat_idle_notify_activity(seat, IDLE_SOURCE_KEYBOARD);
 	bool input_inhibited = seat->exclusive_client != NULL;
 
 	// Identify new keycode, raw keysym(s), and translated keysym(s)
@@ -659,6 +659,15 @@ static bool keymaps_match(struct xkb_keymap *km1, struct xkb_keymap *km2) {
 	return result;
 }
 
+static bool repeat_info_match(struct sway_keyboard *a, struct wlr_keyboard *b) {
+	return a->repeat_rate == b->repeat_info.rate &&
+		a->repeat_delay == b->repeat_info.delay;
+}
+
+static void destroy_empty_wlr_keyboard_group(void *data) {
+	wlr_keyboard_group_destroy(data);
+}
+
 static void sway_keyboard_group_remove(struct sway_keyboard *keyboard) {
 	struct sway_input_device *device = keyboard->seat_device->input_device;
 	struct wlr_keyboard *wlr_keyboard = device->wlr_device->keyboard;
@@ -675,11 +684,17 @@ static void sway_keyboard_group_remove(struct sway_keyboard *keyboard) {
 		struct sway_keyboard_group *sway_group = wlr_group->data;
 		wlr_group->data = NULL;
 		wl_list_remove(&sway_group->link);
+		wl_list_remove(&sway_group->keyboard_key.link);
+		wl_list_remove(&sway_group->keyboard_modifiers.link);
 		sway_keyboard_destroy(sway_group->seat_device->keyboard);
 		free(sway_group->seat_device->input_device);
 		free(sway_group->seat_device);
 		free(sway_group);
-		wlr_keyboard_group_destroy(wlr_group);
+
+		// To prevent use-after-free conditions when handling key events, defer
+		// freeing the wlr_keyboard_group until idle
+		wl_event_loop_add_idle(server.wl_event_loop,
+				destroy_empty_wlr_keyboard_group, wlr_group);
 	}
 }
 
@@ -701,9 +716,10 @@ static void sway_keyboard_group_remove_invalid(struct sway_keyboard *keyboard) {
 		sway_keyboard_group_remove(keyboard);
 		break;
 	case KEYBOARD_GROUP_DEFAULT: /* fallthrough */
-	case KEYBOARD_GROUP_KEYMAP:;
+	case KEYBOARD_GROUP_SMART:;
 		struct wlr_keyboard_group *group = wlr_keyboard->group;
-		if (!keymaps_match(keyboard->keymap, group->keyboard.keymap)) {
+		if (!keymaps_match(keyboard->keymap, group->keyboard.keymap) ||
+				!repeat_info_match(keyboard, &group->keyboard)) {
 			sway_keyboard_group_remove(keyboard);
 		}
 		break;
@@ -731,9 +747,10 @@ static void sway_keyboard_group_add(struct sway_keyboard *keyboard) {
 			// Nothing to do. This shouldn't even be reached
 			return;
 		case KEYBOARD_GROUP_DEFAULT: /* fallthrough */
-		case KEYBOARD_GROUP_KEYMAP:;
+		case KEYBOARD_GROUP_SMART:;
 			struct wlr_keyboard_group *wlr_group = group->wlr_group;
-			if (keymaps_match(keyboard->keymap, wlr_group->keyboard.keymap)) {
+			if (keymaps_match(keyboard->keymap, wlr_group->keyboard.keymap) &&
+					repeat_info_match(keyboard, &wlr_group->keyboard)) {
 				sway_log(SWAY_DEBUG, "Adding keyboard %s to group %p",
 						device->identifier, wlr_group);
 				wlr_keyboard_group_add_keyboard(wlr_group, wlr_keyboard);
@@ -757,6 +774,8 @@ static void sway_keyboard_group_add(struct sway_keyboard *keyboard) {
 	}
 	sway_group->wlr_group->data = sway_group;
 	wlr_keyboard_set_keymap(&sway_group->wlr_group->keyboard, keyboard->keymap);
+	wlr_keyboard_set_repeat_info(&sway_group->wlr_group->keyboard,
+			keyboard->repeat_rate, keyboard->repeat_delay);
 	sway_log(SWAY_DEBUG, "Created keyboard group %p", sway_group->wlr_group);
 
 	sway_group->seat_device = calloc(1, sizeof(struct sway_seat_device));
@@ -826,14 +845,30 @@ void sway_keyboard_configure(struct sway_keyboard *keyboard) {
 		keyboard->keymap ? !keymaps_match(keyboard->keymap, keymap) : true;
 	bool effective_layout_changed = keyboard->effective_layout != 0;
 
-	if (keymap_changed || config->reloading) {
+	int repeat_rate = 25;
+	if (input_config && input_config->repeat_rate != INT_MIN) {
+		repeat_rate = input_config->repeat_rate;
+	}
+	int repeat_delay = 600;
+	if (input_config && input_config->repeat_delay != INT_MIN) {
+		repeat_delay = input_config->repeat_delay;
+	}
+
+	bool repeat_info_changed = keyboard->repeat_rate != repeat_rate ||
+		keyboard->repeat_delay != repeat_delay;
+
+	if (keymap_changed || repeat_info_changed || config->reloading) {
 		xkb_keymap_unref(keyboard->keymap);
 		keyboard->keymap = keymap;
 		keyboard->effective_layout = 0;
+		keyboard->repeat_rate = repeat_rate;
+		keyboard->repeat_delay = repeat_delay;
 
 		sway_keyboard_group_remove_invalid(keyboard);
 
 		wlr_keyboard_set_keymap(wlr_device->keyboard, keyboard->keymap);
+		wlr_keyboard_set_repeat_info(wlr_device->keyboard,
+				keyboard->repeat_rate, keyboard->repeat_delay);
 
 		if (!wlr_device->keyboard->group) {
 			sway_keyboard_group_add(keyboard);
@@ -879,17 +914,6 @@ void sway_keyboard_configure(struct sway_keyboard *keyboard) {
 			sway_keyboard_group_add(keyboard);
 		}
 	}
-
-	int repeat_rate = 25;
-	if (input_config && input_config->repeat_rate != INT_MIN) {
-		repeat_rate = input_config->repeat_rate;
-	}
-	int repeat_delay = 600;
-	if (input_config && input_config->repeat_delay != INT_MIN) {
-		repeat_delay = input_config->repeat_delay;
-	}
-	wlr_keyboard_set_repeat_info(wlr_device->keyboard, repeat_rate,
-			repeat_delay);
 
 	struct wlr_seat *seat = keyboard->seat_device->sway_seat->wlr_seat;
 	wlr_seat_set_keyboard(seat, wlr_device);

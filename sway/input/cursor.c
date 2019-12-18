@@ -206,7 +206,7 @@ void cursor_handle_activity(struct sway_cursor *cursor) {
 	wl_event_source_timer_update(
 			cursor->hide_source, cursor_get_timeout(cursor));
 
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_POINTER);
 	if (cursor->hidden) {
 		cursor_unhide(cursor);
 	}
@@ -341,7 +341,7 @@ static void handle_cursor_frame(struct wl_listener *listener, void *data) {
 
 static void handle_touch_down(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor = wl_container_of(listener, cursor, touch_down);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TOUCH);
 	struct wlr_event_touch_down *event = data;
 
 	struct sway_seat *seat = cursor->seat;
@@ -372,7 +372,7 @@ static void handle_touch_down(struct wl_listener *listener, void *data) {
 
 static void handle_touch_up(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor = wl_container_of(listener, cursor, touch_up);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TOUCH);
 	struct wlr_event_touch_up *event = data;
 	struct wlr_seat *seat = cursor->seat->wlr_seat;
 	// TODO: fall back to cursor simulation if client has not bound to touch
@@ -382,7 +382,7 @@ static void handle_touch_up(struct wl_listener *listener, void *data) {
 static void handle_touch_motion(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor =
 		wl_container_of(listener, cursor, touch_motion);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TOUCH);
 	struct wlr_event_touch_motion *event = data;
 
 	struct sway_seat *seat = cursor->seat;
@@ -492,7 +492,7 @@ static void handle_tablet_tool_position(struct sway_cursor *cursor,
 
 static void handle_tool_axis(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor = wl_container_of(listener, cursor, tool_axis);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TABLET_TOOL);
 	struct wlr_event_tablet_tool_axis *event = data;
 	struct sway_tablet_tool *sway_tool = event->tool->data;
 
@@ -548,7 +548,7 @@ static void handle_tool_axis(struct wl_listener *listener, void *data) {
 
 static void handle_tool_tip(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor = wl_container_of(listener, cursor, tool_tip);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TABLET_TOOL);
 	struct wlr_event_tablet_tool_tip *event = data;
 	struct sway_tablet_tool *sway_tool = event->tool->data;
 	struct wlr_tablet_v2_tablet *tablet_v2 = sway_tool->tablet->tablet_v2;
@@ -589,7 +589,7 @@ static struct sway_tablet *get_tablet_for_device(struct sway_cursor *cursor,
 
 static void handle_tool_proximity(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor = wl_container_of(listener, cursor, tool_proximity);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TABLET_TOOL);
 	struct wlr_event_tablet_tool_proximity *event = data;
 
 	struct wlr_tablet_tool *tool = event->tool;
@@ -619,7 +619,7 @@ static void handle_tool_proximity(struct wl_listener *listener, void *data) {
 
 static void handle_tool_button(struct wl_listener *listener, void *data) {
 	struct sway_cursor *cursor = wl_container_of(listener, cursor, tool_button);
-	wlr_idle_notify_activity(server.idle, cursor->seat->wlr_seat);
+	seat_idle_notify_activity(cursor->seat, IDLE_SOURCE_TABLET_TOOL);
 	struct wlr_event_tablet_tool_button *event = data;
 	struct sway_tablet_tool *sway_tool = event->tool->data;
 	struct wlr_tablet_v2_tablet *tablet_v2 = sway_tool->tablet->tablet_v2;
@@ -735,6 +735,60 @@ static void handle_request_set_cursor(struct wl_listener *listener,
 			event->hotspot_y, focused_client);
 }
 
+static void handle_pointer_pinch_begin(struct wl_listener *listener, void *data) {
+	struct sway_cursor *cursor = wl_container_of(
+			listener, cursor, pinch_begin);
+	struct wlr_event_pointer_pinch_begin *event = data;
+	wlr_pointer_gestures_v1_send_pinch_begin(
+			cursor->pointer_gestures, cursor->seat->wlr_seat,
+			event->time_msec, event->fingers);
+}
+
+static void handle_pointer_pinch_update(struct wl_listener *listener, void *data) {
+	struct sway_cursor *cursor = wl_container_of(
+			listener, cursor, pinch_update);
+	struct wlr_event_pointer_pinch_update *event = data;
+	wlr_pointer_gestures_v1_send_pinch_update(
+			cursor->pointer_gestures, cursor->seat->wlr_seat,
+			event->time_msec, event->dx, event->dy,
+			event->scale, event->rotation);
+}
+
+static void handle_pointer_pinch_end(struct wl_listener *listener, void *data) {
+	struct sway_cursor *cursor = wl_container_of(
+			listener, cursor, pinch_end);
+	struct wlr_event_pointer_pinch_end *event = data;
+	wlr_pointer_gestures_v1_send_pinch_end(
+			cursor->pointer_gestures, cursor->seat->wlr_seat,
+			event->time_msec, event->cancelled);
+}
+
+static void handle_pointer_swipe_begin(struct wl_listener *listener, void *data) {
+	struct sway_cursor *cursor = wl_container_of(
+			listener, cursor, swipe_begin);
+	struct wlr_event_pointer_swipe_begin *event = data;
+	wlr_pointer_gestures_v1_send_swipe_begin(
+			cursor->pointer_gestures, cursor->seat->wlr_seat,
+			event->time_msec, event->fingers);
+}
+
+static void handle_pointer_swipe_update(struct wl_listener *listener, void *data) {
+	struct sway_cursor *cursor = wl_container_of(
+			listener, cursor, swipe_update);
+	struct wlr_event_pointer_swipe_update *event = data;
+	wlr_pointer_gestures_v1_send_swipe_update(
+			cursor->pointer_gestures, cursor->seat->wlr_seat,
+			event->time_msec, event->dx, event->dy);
+}
+
+static void handle_pointer_swipe_end(struct wl_listener *listener, void *data) {
+	struct sway_cursor *cursor = wl_container_of(
+			listener, cursor, swipe_end);
+	struct wlr_event_pointer_swipe_end *event = data;
+	wlr_pointer_gestures_v1_send_swipe_end(
+			cursor->pointer_gestures, cursor->seat->wlr_seat,
+			event->time_msec, event->cancelled);
+}
 void cursor_set_image(struct sway_cursor *cursor, const char *image,
 		struct wl_client *client) {
 	if (!(cursor->seat->wlr_seat->capabilities & WL_SEAT_CAPABILITY_POINTER)) {
@@ -786,6 +840,12 @@ void sway_cursor_destroy(struct sway_cursor *cursor) {
 
 	wl_event_source_remove(cursor->hide_source);
 
+	wl_list_remove(&cursor->pinch_begin.link);
+	wl_list_remove(&cursor->pinch_update.link);
+	wl_list_remove(&cursor->pinch_end.link);
+	wl_list_remove(&cursor->swipe_begin.link);
+	wl_list_remove(&cursor->swipe_update.link);
+	wl_list_remove(&cursor->swipe_end.link);
 	wl_list_remove(&cursor->motion.link);
 	wl_list_remove(&cursor->motion_absolute.link);
 	wl_list_remove(&cursor->button.link);
@@ -824,6 +884,20 @@ struct sway_cursor *sway_cursor_create(struct sway_seat *seat) {
 
 	cursor->hide_source = wl_event_loop_add_timer(server.wl_event_loop,
 			hide_notify, cursor);
+
+	cursor->pointer_gestures = wlr_pointer_gestures_v1_create(server.wl_display);
+	cursor->pinch_begin.notify = handle_pointer_pinch_begin;
+	wl_signal_add(&wlr_cursor->events.pinch_begin, &cursor->pinch_begin);
+	cursor->pinch_update.notify = handle_pointer_pinch_update;
+	wl_signal_add(&wlr_cursor->events.pinch_update, &cursor->pinch_update);
+	cursor->pinch_end.notify = handle_pointer_pinch_end;
+	wl_signal_add(&wlr_cursor->events.pinch_end, &cursor->pinch_end);
+	cursor->swipe_begin.notify = handle_pointer_swipe_begin;
+	wl_signal_add(&wlr_cursor->events.swipe_begin, &cursor->swipe_begin);
+	cursor->swipe_update.notify = handle_pointer_swipe_update;
+	wl_signal_add(&wlr_cursor->events.swipe_update, &cursor->swipe_update);
+	cursor->swipe_end.notify = handle_pointer_swipe_end;
+	wl_signal_add(&wlr_cursor->events.swipe_end, &cursor->swipe_end);
 
 	// input events
 	wl_signal_add(&wlr_cursor->events.motion, &cursor->motion);
