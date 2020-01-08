@@ -789,6 +789,26 @@ static void handle_pointer_swipe_end(struct wl_listener *listener, void *data) {
 			cursor->pointer_gestures, cursor->seat->wlr_seat,
 			event->time_msec, event->cancelled);
 }
+
+static void handle_image_surface_destroy(struct wl_listener *listener,
+		void *data) {
+	struct sway_cursor *cursor =
+		wl_container_of(listener, cursor, image_surface_destroy);
+	cursor_set_image(cursor, NULL, cursor->image_client);
+	cursor_rebase(cursor);
+}
+
+static void set_image_surface(struct sway_cursor *cursor,
+		struct wlr_surface *surface) {
+	wl_list_remove(&cursor->image_surface_destroy.link);
+	cursor->image_surface = surface;
+	if (surface) {
+		wl_signal_add(&surface->events.destroy, &cursor->image_surface_destroy);
+	} else {
+		wl_list_init(&cursor->image_surface_destroy.link);
+	}
+}
+
 void cursor_set_image(struct sway_cursor *cursor, const char *image,
 		struct wl_client *client) {
 	if (!(cursor->seat->wlr_seat->capabilities & WL_SEAT_CAPABILITY_POINTER)) {
@@ -796,8 +816,8 @@ void cursor_set_image(struct sway_cursor *cursor, const char *image,
 	}
 
 	const char *current_image = cursor->image;
+	set_image_surface(cursor, NULL);
 	cursor->image = image;
-	cursor->image_surface = NULL;
 	cursor->hotspot_x = cursor->hotspot_y = 0;
 	cursor->image_client = client;
 
@@ -820,8 +840,8 @@ void cursor_set_image_surface(struct sway_cursor *cursor,
 		return;
 	}
 
+	set_image_surface(cursor, surface);
 	cursor->image = NULL;
-	cursor->image_surface = surface;
 	cursor->hotspot_x = hotspot_x;
 	cursor->hotspot_y = hotspot_y;
 	cursor->image_client = client;
@@ -840,6 +860,7 @@ void sway_cursor_destroy(struct sway_cursor *cursor) {
 
 	wl_event_source_remove(cursor->hide_source);
 
+	wl_list_remove(&cursor->image_surface_destroy.link);
 	wl_list_remove(&cursor->pinch_begin.link);
 	wl_list_remove(&cursor->pinch_update.link);
 	wl_list_remove(&cursor->pinch_end.link);
@@ -884,6 +905,9 @@ struct sway_cursor *sway_cursor_create(struct sway_seat *seat) {
 
 	cursor->hide_source = wl_event_loop_add_timer(server.wl_event_loop,
 			hide_notify, cursor);
+
+	wl_list_init(&cursor->image_surface_destroy.link);
+	cursor->image_surface_destroy.notify = handle_image_surface_destroy;
 
 	cursor->pointer_gestures = wlr_pointer_gestures_v1_create(server.wl_display);
 	cursor->pinch_begin.notify = handle_pointer_pinch_begin;
