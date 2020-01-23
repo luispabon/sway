@@ -1,4 +1,5 @@
 sway-backgrounds/
+sway/
 tmp/
 usr/
 mako/
@@ -8,4 +9,3 @@ files
 *.substvars
 .debhelper
 *.dirs
-*.install
