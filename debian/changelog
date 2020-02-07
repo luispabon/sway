@@ -2,7 +2,7 @@ sway (1:1.4-luis2~disco) disco; urgency=low
 
   * Backport "Fix seat_set_focus_layer crash when disabling output "
 
- -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Thu, 23 Jan 2020 09:47:10 +0400
+ -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Fri, 07 Feb 2020 09:47:10 +0400
 
 sway (1:1.4-luis1~disco) disco; urgency=low
 
