@@ -1,3 +1,11 @@
+sway (1:1.4-luis3~disco) disco; urgency=low
+
+  * Backport "Fix get_int_prop(WINDOW_TYPE) crash"
+  * Backport "Fix crash: use wlr_output->name instead of possibly missing oc->name"
+  * Backport "cmd_swap: fix test_mark condition"
+
+ -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Sun, 23 Feb 2020 09:47:10 +0400
+
 sway (1:1.4-luis2~disco) disco; urgency=low
 
   * Backport "Fix seat_set_focus_layer crash when disabling output "
