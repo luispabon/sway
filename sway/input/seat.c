@@ -922,6 +922,8 @@ void seat_configure_xcursor(struct sway_seat *seat) {
 			output->name, (double)output->scale);
 	}
 
+	// Reset the cursor so that we apply it to outputs that just appeared
+	cursor_set_image(seat->cursor, NULL, NULL);
 	cursor_set_image(seat->cursor, "left_ptr", NULL);
 	wlr_cursor_warp(seat->cursor->cursor, NULL, seat->cursor->cursor->x,
 		seat->cursor->cursor->y);
