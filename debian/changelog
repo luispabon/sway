@@ -1,4 +1,4 @@
-sway (1:1.4-luis3~disco) disco; urgency=low
+sway (1:1.4-luis3) disco; urgency=low
 
   * Backport "Fix get_int_prop(WINDOW_TYPE) crash"
   * Backport "Fix crash: use wlr_output->name instead of possibly missing oc->name"
