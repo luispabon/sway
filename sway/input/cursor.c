@@ -407,10 +407,6 @@ static void handle_touch_down(struct wl_listener *listener, void *data) {
 				event->touch_id, sx, sy);
 		cursor_hide(cursor);
 	}
-
-	if (focused_node) {
-		seat_set_focus(seat, focused_node);
-	}
 }
 
 static void handle_touch_up(struct wl_listener *listener, void *data) {
