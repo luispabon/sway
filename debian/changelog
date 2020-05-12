@@ -1,6 +1,5 @@
 sway (1:1.4-luis4) disco; urgency=low
 
-  * Backport "Don't transfer focus to NULL node on touch"
   * Backport "interpret "subpixel none" as CAIRO_ANTIALIAS_GRAY"
   * Backport "Don't assert the cursor theme loads"
   * Backport "Fix invisible cursor on startup"
