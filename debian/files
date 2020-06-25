@@ -1,0 +1,4 @@
+sway-backgrounds_1.5-rc1-luis1_all.deb x11 optional
+sway-dbgsym_1.5-rc1-luis1_amd64.ddeb debug optional automatic=yes
+sway_1.5-rc1-luis1_amd64.buildinfo x11 optional
+sway_1.5-rc1-luis1_amd64.deb x11 optional

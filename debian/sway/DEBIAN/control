@@ -1,0 +1,16 @@
+Package: sway
+Version: 1:1.5-rc1-luis1
+Architecture: amd64
+Maintainer: Sway and related packages team <team+swaywm@tracker.debian.org>
+Installed-Size: 839
+Depends: libgl1-mesa-dri, swaybg, libc6 (>= 2.28), libcairo2 (>= 1.10.0), libevdev2 (>= 0.9.1), libgdk-pixbuf2.0-0 (>= 2.31.1), libgles2, libglib2.0-0 (>= 2.12.0), libinput10 (>= 1.6.0), libjson-c4 (>= 0.13.1), libpango-1.0-0 (>= 1.22.0), libpangocairo-1.0-0 (>= 1.22.0), libpcre3, libpixman-1-0 (>= 0.25.2), libsystemd0 (>= 243), libwayland-client0 (>= 1.9.91), libwayland-cursor0 (>= 1.0.2), libwayland-server0 (>= 1.14.91), libwlroots5 (>= 0.10.99), libxcb1, libxkbcommon0 (>= 0.7.0)
+Recommends: suckless-tools, sway-backgrounds, x-terminal-emulator
+Suggests: swayidle, swaylock
+Section: x11
+Priority: optional
+Homepage: http://swaywm.org
+Description: i3-compatible Wayland compositor
+ sway (SirCmpwn's Wayland compositor) is a tiling Wayland compositor and a
+ drop-in replacement for the i3 window manager for X11. It works with your
+ existing i3 configuration and supports most of i3's features, plus a few
+ extras. This means it is a minimalist, tiling window manager.
