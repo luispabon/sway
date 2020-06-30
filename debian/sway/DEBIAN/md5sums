@@ -1,7 +1,7 @@
-ed1fe5dfa2548479726a81f8d6c9dc8f  usr/bin/sway
-c927a680d0c0f8435b9c06e3d8158fb4  usr/bin/swaybar
-2e2c9e849ed4bb772fa066dd161a3d6e  usr/bin/swaymsg
-24d38a31da339450cbb85553a7a5cf9b  usr/bin/swaynag
+78045741b8495f81723c5a8d71272dfb  usr/bin/sway
+32f1990a41d4dada63f7e5236f9ef8b8  usr/bin/swaybar
+c08b2a707db5f722579d3a0cd7b41c09  usr/bin/swaymsg
+d9989ed5c0b0ba532f5ae4c00f5da170  usr/bin/swaynag
 38d041c9ac9310b5081556d822794aba  usr/share/bash-completion/completions/sway
 32757896d7fc71cc6acb57eec3559df3  usr/share/bash-completion/completions/swaybar
 7a5eba86cd82c62efbfbd558559bd9d8  usr/share/bash-completion/completions/swaymsg
