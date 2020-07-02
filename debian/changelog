@@ -1,3 +1,9 @@
+sway (1:1.5-rc2-luis1) disco; urgency=low
+
+  * New sway version
+
+ -- Luis Pabon <luis.pabon@auronconsulting.co.uk>  Thu, 02 Jul 2020 09:47:10 +0400
+
 sway (1:1.5-rc1-luis1) disco; urgency=low
 
   * New sway version
