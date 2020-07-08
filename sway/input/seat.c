@@ -470,31 +470,29 @@ static void handle_start_drag(struct wl_listener *listener, void *data) {
 	wl_signal_add(&wlr_drag->events.destroy, &drag->destroy);
 
 	struct wlr_drag_icon *wlr_drag_icon = wlr_drag->icon;
-	if (wlr_drag_icon == NULL) {
-		return;
+	if (wlr_drag_icon != NULL) {
+		struct sway_drag_icon *icon = calloc(1, sizeof(struct sway_drag_icon));
+		if (icon == NULL) {
+			sway_log(SWAY_ERROR, "Allocation failed");
+			return;
+		}
+		icon->seat = seat;
+		icon->wlr_drag_icon = wlr_drag_icon;
+		wlr_drag_icon->data = icon;
+
+		icon->surface_commit.notify = drag_icon_handle_surface_commit;
+		wl_signal_add(&wlr_drag_icon->surface->events.commit, &icon->surface_commit);
+		icon->unmap.notify = drag_icon_handle_unmap;
+		wl_signal_add(&wlr_drag_icon->events.unmap, &icon->unmap);
+		icon->map.notify = drag_icon_handle_map;
+		wl_signal_add(&wlr_drag_icon->events.map, &icon->map);
+		icon->destroy.notify = drag_icon_handle_destroy;
+		wl_signal_add(&wlr_drag_icon->events.destroy, &icon->destroy);
+
+		wl_list_insert(&root->drag_icons, &icon->link);
+
+		drag_icon_update_position(icon);
 	}
-
-	struct sway_drag_icon *icon = calloc(1, sizeof(struct sway_drag_icon));
-	if (icon == NULL) {
-		sway_log(SWAY_ERROR, "Allocation failed");
-		return;
-	}
-	icon->seat = seat;
-	icon->wlr_drag_icon = wlr_drag_icon;
-	wlr_drag_icon->data = icon;
-
-	icon->surface_commit.notify = drag_icon_handle_surface_commit;
-	wl_signal_add(&wlr_drag_icon->surface->events.commit, &icon->surface_commit);
-	icon->unmap.notify = drag_icon_handle_unmap;
-	wl_signal_add(&wlr_drag_icon->events.unmap, &icon->unmap);
-	icon->map.notify = drag_icon_handle_map;
-	wl_signal_add(&wlr_drag_icon->events.map, &icon->map);
-	icon->destroy.notify = drag_icon_handle_destroy;
-	wl_signal_add(&wlr_drag_icon->events.destroy, &icon->destroy);
-
-	wl_list_insert(&root->drag_icons, &icon->link);
-
-	drag_icon_update_position(icon);
 	seatop_begin_default(seat);
 }
 
@@ -572,14 +570,6 @@ struct sway_seat *seat_create(const char *seat_name) {
 
 	seat->deferred_bindings = create_list();
 
-	if (!wl_list_empty(&server.input->seats)) {
-		// Since this is not the first seat, attempt to set initial focus
-		struct sway_seat *current_seat = input_manager_current_seat();
-		struct sway_node *current_focus =
-			seat_get_focus_inactive(current_seat, &root->node);
-		seat_set_focus(seat, current_focus);
-	}
-
 	wl_signal_add(&root->events.new_node, &seat->new_node);
 	seat->new_node.notify = handle_new_node;
 
@@ -604,7 +594,16 @@ struct sway_seat *seat_create(const char *seat_name) {
 
 	sway_input_method_relay_init(seat, &seat->im_relay);
 
+	bool first = wl_list_empty(&server.input->seats);
 	wl_list_insert(&server.input->seats, &seat->link);
+
+	if (!first) {
+		// Since this is not the first seat, attempt to set initial focus
+		struct sway_seat *current_seat = input_manager_current_seat();
+		struct sway_node *current_focus =
+			seat_get_focus_inactive(current_seat, &root->node);
+		seat_set_focus(seat, current_focus);
+	}
 
 	seatop_begin_default(seat);
 
@@ -924,7 +923,7 @@ void seat_configure_xcursor(struct sway_seat *seat) {
 		}
 
 #if HAVE_XWAYLAND
-		if (config->xwayland && (!server.xwayland.xcursor_manager ||
+		if (server.xwayland.wlr_xwayland && (!server.xwayland.xcursor_manager ||
 				!xcursor_manager_is_named(server.xwayland.xcursor_manager,
 					cursor_theme) ||
 				server.xwayland.xcursor_manager->size != cursor_size)) {
