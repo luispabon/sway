@@ -1,6 +1,6 @@
 Package: sway-backgrounds
 Source: sway
-Version: 1:1.5-rc1-luis1
+Version: 1:1.5-luis1
 Architecture: all
 Maintainer: Sway and related packages team <team+swaywm@tracker.debian.org>
 Installed-Size: 4931

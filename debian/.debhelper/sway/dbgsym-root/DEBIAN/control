@@ -1,13 +1,13 @@
 Package: sway-dbgsym
 Package-Type: ddeb
 Source: sway
-Version: 1:1.5-rc1-luis1
+Version: 1:1.5-luis1
 Auto-Built-Package: debug-symbols
 Architecture: amd64
 Maintainer: Sway and related packages team <team+swaywm@tracker.debian.org>
-Installed-Size: 1013
-Depends: sway (= 1:1.5-rc1-luis1)
+Installed-Size: 1017
+Depends: sway (= 1:1.5-luis1)
 Section: debug
 Priority: optional
 Description: debug symbols for sway
-Build-Ids: 0cf594d6c00f75a0a8a855c668798bbba05e8bb2 691c15bcc57fe70ad9878504f30c4d12bedf29ef 9c70e50f7bf7fcdc90c897b1660dc428af7c3347 f86e0a546d9ebaa8848b79b6456d2d3ad7845287
+Build-Ids: 0de233a93311dc68ccac56ff41ee6efbdbffd2ef 50b33ada2d04df9e21f643ef5127d0683c87a80e 5294cfd9c022e645bcd47a8e5308aa2add6f6fdd 7b850b82aa9d6933f6c553056ba0aca3b36f3793

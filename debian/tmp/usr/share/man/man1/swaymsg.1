@@ -5,7 +5,7 @@
 .nh
 .ad l
 .\" Begin generated content:
-.TH "swaymsg" "1" "2020-06-25"
+.TH "swaymsg" "1" "2020-07-16"
 .P
 .SH NAME
 .P
@@ -68,12 +68,35 @@ Print the version (of swaymsg) and quit.
 The message is a sway command (the same commands you can bind to keybindings
 in your sway config file). It will be executed immediately.
 .P
-See \fB\fRsway\fB\fR(5) for a list of commands.
+See \fBsway\fR(5) for a list of commands.
 .P
-Tip: If you are proving a command that contains a leading hyphen (\fI-\fR),
-insert two hyphens (\fI--\fR) before the command to signal to swaymsg not to
-parse anything beyond that point as an option. For example, use
-\fIswaymsg -- mark --add test\fR instead of \fIswaymsg mark --add test\fR
+Tips:
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.IP \(bu 4
+.\}
+Command expansion is performed twice: once by swaymsg, and again by sway.
+If you have quoted multi-word strings in your command, enclose the entire
+command in single-quotes. For example, use
+\fIswaymsg 'output "Foobar Display" enable'\fR instead of
+\fIswaymsg output "Foobar Display" enable\fR.
+.RE
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.IP \(bu 4
+.\}
+If you are proving a command that contains a leading hyphen (\fI-\fR), insert
+two hyphens (\fI--\fR) before the command to signal to swaymsg not to parse
+anything beyond that point as an option. For example, use
+\fIswaymsg -- mark --add test\fR instead of \fIswaymsg mark --add test\fR.
+
+.RE
 .P
 .RE
 \fBget_workspaces\fR
